@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка файлов</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Загрузка файлов</h1>
+        <p class="subtitle">SVG, PPTX, ODP</p>
+
+        {% if message %}
+        <div class="message {{ message_type }}">{{ message }}</div>
+        {% endif %}
+
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Файл</label>
+                <input type="file" id="file" name="file" accept=".svg,.pptx,.odp" required>
+                <p class="format-info">{{ allowed_formats }}</p>
+            </div>
+            <button type="submit" class="btn">Отправить</button>
+        </form>
+
+        {% if files %}
+        <ul class="file-list">
+            {% for file in files %}
+            <li>{{ file }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const file = document.getElementById('file').files[0];
+            if (file) {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                if (!['.svg', '.pptx', '.odp'].includes(ext)) {
+                    e.preventDefault();
+                    alert('Недопустимый формат');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
