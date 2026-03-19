@@ -6,8 +6,10 @@ from config import settings
 from services import file_service
 
 app = FastAPI(title="File Upload")
+
 templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def get_form(request: Request):

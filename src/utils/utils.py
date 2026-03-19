@@ -1,14 +1,11 @@
 from pathlib import Path
 from typing import Tuple, Optional
+from datetime import datetime
 from config import settings
+from datetime import datetime
 
 def validate_file_extension(filename: str) -> Tuple[bool, str]:
-    """
-    Проверка расширения файла
-    
-    Returns:
-        Tuple[bool, str]: (валиден, сообщение)
-    """
+    """Проверка расширения файла"""
     if not filename:
         return False, "Имя файла не указано"
     
@@ -20,12 +17,7 @@ def validate_file_extension(filename: str) -> Tuple[bool, str]:
     return True, "OK"
 
 def validate_file_size(file_size: int) -> Tuple[bool, str]:
-    """
-    Проверка размера файла
-    
-    Returns:
-        Tuple[bool, str]: (валиден, сообщение)
-    """
+    """Проверка размера файла"""
     if file_size > settings.MAX_FILE_SIZE:
         return False, f"Файл слишком большой. Максимум: {settings.MAX_FILE_SIZE // 1024 // 1024} MB"
     
@@ -43,8 +35,6 @@ def get_file_info(file_path: Path) -> dict:
 def generate_unique_filename(filename: str) -> str:
     """Генерация уникального имени файла"""
     import uuid
-    from pathlib import Path
-    
     name = Path(filename).stem
     ext = Path(filename).suffix
     
