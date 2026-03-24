@@ -1,11 +1,11 @@
 [project]
-name = "kryto"
+name = "pythonproject3"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.135.1",
-    "odfdo>=3.22.0",
-    "svglib>=1.6.0",
+    "python-multipart>=0.0.22",
+    "uvicorn>=0.42.0",
 ]

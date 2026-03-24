@@ -4,12 +4,11 @@ import shutil
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict
+from config import temp_dir
 
-def unpack(odp_bytes: bytes, filename: str, temp_dir: str = "temp") -> Path:
+def unpack(odp_bytes: bytes, filename: str) -> Path:
     stem = Path(filename).stem
-    base_path = Path(__file__).parent.parent / temp_dir
-    base_path.mkdir(exist_ok=True)
-    target_dir = base_path / stem
+    target_dir = temp_dir / stem
     if target_dir.exists():
         shutil.rmtree(target_dir)
     target_dir.mkdir()
