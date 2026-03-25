@@ -1,12 +1,21 @@
 import uvicorn, json
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from processing_files.handler import handler_file
 from config import temp_dir, rendered_files_dir
 from processing_files.clean_temp import clean_temp_dir
 from processing_files.convert_to_pdf import convert_file_to_pdf
 
 app = FastAPI()
+
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    file_path = "index.html"
+
+    with open(file_path, 'r', encoding="utf-8") as file:
+        html_content = file.read()
+
+    return HTMLResponse(content=html_content)
 
 @app.post("/render_files")
 async def render(template: UploadFile, data: UploadFile):
