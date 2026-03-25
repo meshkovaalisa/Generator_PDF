@@ -7,8 +7,8 @@
   </head>
   <body>
     <form action="/render_files" method="post" enctype="multipart/form-data">
-      <input type="file" name="template" required />
-      <input type="file" name="data" required />
+      <input type="file" name="template" accept=".odp, .pptx, .svg" required />
+      <input type="file" name="data" accept=".json" required />
       <button type="submit">Отправить</button>
     </form>
   </body>
