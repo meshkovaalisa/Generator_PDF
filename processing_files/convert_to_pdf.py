@@ -1,8 +1,20 @@
 import subprocess
 from pathlib import Path
-
+from typing import Union
 from config import soffice_path
-def convert_file_to_pdf(file_path, output_dir):
+
+
+def convert_file_to_pdf(file_path: Union[str, Path], output_dir: Union[str, Path]) -> Path:
+    """
+    Конвертация файла в PDF формат с помощью LibreOffice.
+
+    Args:
+        file_path (Union[str, Path]): Путь к исходному файлу для конвертации
+        output_dir (Union[str, Path]): Путь к директории для сохранения PDF
+
+    Returns:
+        Path: Путь к созданному PDF-файлу
+    """
 
     file_path = Path(file_path)
     output_dir = Path(output_dir)
@@ -20,6 +32,3 @@ def convert_file_to_pdf(file_path, output_dir):
     pdf_file_path = output_dir / f"{file_path.stem}.pdf"
     print(pdf_file_path, pdf_file_path.name)
     return pdf_file_path
-
-
-
