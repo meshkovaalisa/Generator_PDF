@@ -4,12 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <form action="/render_files" method="post" enctype="multipart/form-data">
-      <input type="file" name="template" accept=".odp, .pptx, .svg" required />
-      <input type="file" name="data" accept=".json" required />
-      <button type="submit">Отправить</button>
-    </form>
+    <div class="card">
+      <h1>Загрузка файлов</h1>
+      <p>Шаблоны принимаются в форматах <strong>.svg, .odp, .pptx</strong></p>
+      <p>Текст пишется в формате <strong>.json</strong></p>
+      <form action="/render_files" method="post" enctype="multipart/form-data">
+        <input type="file" name="template" accept=".odp, .pptx, .svg" required />
+        <input type="file" name="data" accept=".json" required />
+        <button type="submit">Отправить</button>
+      </form>
+      <div class="note">Файл будет сконвертирован в PDF</div>
+    </div>
   </body>
 </html>
