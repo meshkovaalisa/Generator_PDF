@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from processing_files.modules import unpack, pack_odp, pack_pptx, replace_placeholders, svg
+from processing_files.modules import unpack, pack_odp, pack_pptx, replace_placeholders
 from config import temp_dir
 
 def handler_file(file,data, output_file = None):
@@ -15,9 +15,13 @@ def handler_file(file,data, output_file = None):
         odp_bytes = f.read()
 
     if source.suffix == ".svg":
-        svg(source, data)
-        output_file = source.parent / f"{source.stem}.svg"
-        print(output_file)
+        # svg(source, data)
+        # output_file = source.parent / f"{source.stem}.svg"
+        # print(output_file)
+        with open(source, 'r', encoding='utf-8') as f:
+            content = f.read()
+        replace_placeholders(source, data)
+        output_file = source.parent / source
 
 
     if source.suffix == ".pptx":

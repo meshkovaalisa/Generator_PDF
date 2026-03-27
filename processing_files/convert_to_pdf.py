@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-
+inkscape_path = r"C:\Program Files\Inkscape\inkscape.exe"
 from config import soffice_path
 def convert_file_to_pdf(file_path, output_dir):
 
@@ -20,6 +20,4 @@ def convert_file_to_pdf(file_path, output_dir):
     pdf_file_path = output_dir / f"{file_path.stem}.pdf"
     print(pdf_file_path, pdf_file_path.name)
     return pdf_file_path
-
-
 
