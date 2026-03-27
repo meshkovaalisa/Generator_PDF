@@ -1,6 +1,7 @@
 import uvicorn, json
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from processing_files.handler import handler_file
 from config import temp_dir, rendered_files_dir
 from processing_files.clean_temp import clean_temp_dir
@@ -28,6 +29,8 @@ app = FastAPI(title="Document Template Processor",
     description="Сервис для заполнения шаблонов документами и конвертации в PDF",
     version="1.0.0",
     lifespan=lifespan)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
