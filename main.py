@@ -74,7 +74,7 @@ async def render(template: UploadFile, data: UploadFile) -> FileResponse:
     try:
         json_data = json.loads(content.decode('utf-8'))
     except json.JSONDecodeError:
-        raise HTTPException(400, "Invalid JSON data")
+        raise HTTPException(400, "Невалидная JSON-дата")
 
     modificated_file_path = handler_file(filename_in_dir, json_data)
 
