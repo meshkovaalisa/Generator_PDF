@@ -1,0 +1,135 @@
+body {
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #ede1d9;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h1 {
+    margin-top: 0;
+    color: #5c3015;
+    text-align: center;
+}
+
+.note {
+    font-size: 14px;
+    color: #8b6c64;
+    margin-top: 16px;
+    text-align: center;
+}
+
+input[type="file"] {
+    width: 97%;
+    padding: 8px;
+    border: 2px dashed #e1d1cb;
+    border-radius: 7px;
+    background: #fcf9f8;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+input[type="file"]:hover {
+    border-color: #c57758;
+}
+
+button {
+    background: #894922;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #a26b3e;
+}
+
+strong {
+    color: #5c3015;
+}
+
+.template-card {
+        background: linear-gradient(135deg, #fcf9f8 0%, #f5f0ed 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e1d1cb;
+        transition: all 0.3s ease;
+      }
+      
+      .template-card.selected {
+        border: 2px solid #894922;
+        background: #fff9f5;
+        box-shadow: 0 4px 12px rgba(137, 73, 34, 0.15);
+      }
+      
+      .template-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      
+      .template-icon {
+        font-size: 32px;
+        background: #ede1d9;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .template-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #5c3015;
+        margin: 0;
+      }
+      
+      .template-desc {
+        color: #8b6c64;
+        font-size: 13px;
+        margin: 5px 0 0 0;
+      }
+      
+      .template-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e1d1cb;
+        font-size: 12px;
+        color: #a0867c;
+      }
+      
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      
+      .badge {
+        display: inline-block;
+        background: #89492220;
+        color: #894922;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+      }
