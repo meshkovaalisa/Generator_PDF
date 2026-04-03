@@ -9,9 +9,8 @@
   <body>
     <div class="card">
       <h1>Загрузка файлов</h1>
-      <p>Выберите шаблон из списка и загрузите файл с JSON-данными</p>
-      <p>Шаблоны доступны в форматах <strong>.svg, .odp, .pptx</strong></p>
-      <p>Текст пишется в формате <strong>.json</strong></p>
+      <p>Шаблоны доступны в форматах <strong>.odp</strong></p>
+      <p>Текст используется в формате <strong>.json</strong></p>
       <form action="/render_files" method="post" enctype="multipart/form-data">
         <div class="form-group">
           <label class="select-label">Выберите шаблон:</label>
@@ -27,13 +26,11 @@
           </select>
         </div>
         <div id="templateInfo"></div>
-        <input type="file" name="data" accept=".json" required />
         <button type="submit">Отправить</button>
       </form>
       <div class="note">Файл будет сконвертирован в PDF</div>
     </div>
     <script>
-      // Пути к файлам шаблонов на сервере
       const templateFiles = {
         "ETI": "static/templates/Shablon_ETI.odp",
         "IGSN": "static/templates/Shablon_IGSN.odp",
@@ -43,55 +40,50 @@
         "MA": "static/templates/Shablon_MA.odp",
         "YUF": "static/templates/Shablon_YUF.odp"
       };
+      const templatePreviews = {
+        "ETI": "static/previews/ETI_preview.png",
+        "IGSN": "static/previews/IGSN_preview.png",
+        "IISCT": "static/previews/IISCT_preview.png",
+        "IKIP": "static/previews/IKIP_preview.png",
+        "IPAT": "static/previews/IPAT_preview.png",
+        "MA": "static/previews/MA_preview.png",
+        "YUF": "static/previews/YUF_preview.png"
+      };
       
       // Мета-информация о шаблонах
       const templatesMeta = {
         "ETI": {
           fullName: "Естественно-технологический институт",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#006d5b"
         },
         "IGSN": {
           fullName: "Институт гуманитарных и социальных наук",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#d76e00"
         },
         "IISCT": {
           fullName: "Институт интеллектуальных систем и цифровых технологий",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#00008b"
         },
         "IKIP": {
           fullName: "Институт креативных индустрий и предпринимательства",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#a000fa"
         },
         "IPAT": {
           fullName: "Институт прикладных арктических технологий",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#5f09c6"
         },
         "MA": {
           fullName: "Морская академия",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#0095b6"
         },
         "YUF": {
           fullName: "Юридический факультет",
-          fields: ["title", "code_line", "degree", "about_text", "study1", "study2", "study3", "study4", "study5", "profile_value", "mode_value", "exam1", "exam2", "exam3", "exam4", "exam5", "opp1","opp2", "opp3", "opp4", "opp5"],
           color: "#9c1a15"
         }
       };
       
       const selectElement = document.getElementById("templateSelect");
       const infoContainer = document.getElementById("templateInfo");
-      
-      function formatFieldName(field) {
-        const names = {
-          //тут будут русские названия полей
-        };
-        return names[field] || field;
-      }
       
       function updateTemplateInfo() {
         const selectedValue = selectElement.value;
@@ -100,7 +92,7 @@
           infoContainer.innerHTML = `
             <div class="template-card">
               <div style="text-align: center; color: #8b6c64; padding: 20px;">
-                Выберите шаблон из списка выше
+                Тут будет превью шаблона
               </div>
             </div>
           `;
@@ -109,7 +101,8 @@
         
         const meta = templatesMeta[selectedValue];
         const fileName = templateFiles[selectedValue];
-        const shortName = selectElement.options[selectElement.selectedIndex].text.split(' - ')[0];
+        const shortName = selectElement.options[selectElement.selectedIndex].text;
+        const previewUrl = templatePreviews[selectedValue];
         
         if (meta) {
           infoContainer.innerHTML = `
@@ -122,21 +115,18 @@
                 </div>
               </div>
               
+              <!-- КАРТИНКА-ПРЕВЬЮ между названием института и именем файла -->
+              <div style="margin: 15px 0; text-align: center;">
+                <img src="${previewUrl}" 
+                     alt="Превью шаблона ${shortName}"
+                     style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #e1d1cb;"
+                     onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML += '<div style=\'color:#8b6c64; font-size:13px; padding:10px;\'>⚠️ Превью недоступно<br><small>Положите PNG по пути: ${previewUrl}</small></div>';" />
+              </div>
+              
               <div class="template-meta">
                 <div class="meta-item">
-                  📁 <strong>Файл:</strong> ${fileName.split('/').pop()}
+                  <strong>Файл:</strong> ${fileName.split('/').pop()}
                 </div>
-                <div class="meta-item">
-                  🔧 <strong>Ожидаемые поля в JSON:</strong>
-                </div>
-              </div>
-              
-              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
-                ${meta.fields.map(f => `<span class="badge">${formatFieldName(f)}</span>`).join('')}
-              </div>
-              
-              <div class="note" style="margin-top: 12px; margin-bottom: 0; font-size: 12px; text-align: left;">
-                💡 JSON должен содержать эти поля для корректной подстановки в шаблон
               </div>
             </div>
           `;
@@ -144,7 +134,6 @@
           infoContainer.innerHTML = `
             <div class="template-card selected">
               <div class="template-header">
-                <div class="template-icon">📄</div>
                 <div>
                   <div class="template-title">${shortName}</div>
                   <div class="template-desc">Файл: ${fileName}</div>
