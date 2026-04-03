@@ -6,6 +6,12 @@ from config import temp_dir, rendered_files_dir
 from processing_files.clean_temp import clean_temp_dir
 from processing_files.convert_to_pdf import convert_file_to_pdf
 from contextlib import asynccontextmanager
+from config import *
+import aiofiles
+import hashlib
+
+from processing_files.modules import zip_and_save
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,9 +31,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Document Template Processor",
-    description="Сервис для заполнения шаблонов документами и конвертации в PDF",
-    version="1.0.0",
-    lifespan=lifespan)
+              description="Сервис для заполнения шаблонов документами и конвертации в PDF",
+              version="1.0.0",
+              lifespan=lifespan)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -58,13 +64,41 @@ async def render(template: UploadFile, data: UploadFile) -> FileResponse:
     Returns:
         FileResponse: экземпляр класса для отправки с сервера клиенту результирующего файла
     """
+
     if not template.filename.endswith(('.pptx', '.odp', '.svg')):
         raise HTTPException(400, "Неправильный формат файла. Используйте .pptx, .odp or .svg")
 
     if not data.filename.endswith('json'):
         raise HTTPException(400, "Неправильный формат файла. Используйте .json")
 
-    filename_in_dir = "temp_" + template.filename
+    template_bytes = template.file.read()
+    template.file.seek(0)
+
+    file_hash = hashlib.md5(template_bytes).hexdigest()
+    (rendered_files_dir / file_hash).mkdir(exist_ok=True)
+    new_folder = rendered_files_dir / file_hash
+
+    for file in depart_info.iterdir():
+        if file.is_file() and file.suffix == ".json":
+            filename_in_dir = f"temp_{file.stem}_{template.filename}"
+            temp_path = temp_dir / filename_in_dir
+
+            async with aiofiles.open(temp_path, "wb") as f:
+                await f.write(template_bytes)
+
+            async with aiofiles.open(file, "r", encoding="utf-8") as f:
+                content = await f.read()
+
+            try:
+                json_data = json.loads(content)
+            except json.JSONDecodeError as e:
+                raise HTTPException(400, f"Invalid JSON in {file.name}: {e}")
+
+            modificated_file_path = handler_file(filename_in_dir, json_data)
+            complete_file_path = convert_file_to_pdf(modificated_file_path, new_folder)
+    zip_arh = zip_and_save(new_folder, rendered_files_dir)
+
+    """filename_in_dir = "temp_" + template.filename
 
     with open(f"{temp_dir / filename_in_dir}", "wb") as f:
         f.write(template.file.read())
@@ -79,11 +113,11 @@ async def render(template: UploadFile, data: UploadFile) -> FileResponse:
     modificated_file_path = handler_file(filename_in_dir, json_data)
 
     complete_file_path = convert_file_to_pdf(modificated_file_path, rendered_files_dir)
-
+"""
     return FileResponse(
-        complete_file_path,
-        media_type="application/pdf",
-        filename=complete_file_path.name
+        zip_arh,
+        media_type="application/zip",
+        filename=zip_arh.name
     )
 
 
