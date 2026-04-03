@@ -91,3 +91,26 @@ def replace_placeholders(xml_path: Path, data: Dict[str, str]) -> None:
 
     # Записываем изменения обратно
     tree.write(xml_path, encoding='utf-8', xml_declaration=True)
+
+
+def zip_and_save(folder, output_dir: Path):
+    """
+    Сохраняет ZIP архив на диск
+
+    Args:
+        folder: папка для архивации
+        output_dir: директория для сохранения ZIP файла
+
+    Returns:
+        Path: путь к созданному ZIP файлу
+    """
+    # Создаем имя ZIP файла на основе имени папки
+    zip_filename = output_dir / f"{folder.name}.zip"
+
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for file_path in folder.rglob("*"):
+            if file_path.is_file():
+                arcname = file_path.relative_to(folder.parent)
+                zip_file.write(file_path, arcname=arcname)
+
+    return zip_filename
