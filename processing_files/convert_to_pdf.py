@@ -30,5 +30,5 @@ def convert_file_to_pdf(file_path: Union[str, Path], output_dir: Union[str, Path
     subprocess.run(command, check=True)
 
     pdf_file_path = output_dir / f"{file_path.stem}.pdf"
-    print(pdf_file_path, pdf_file_path.name)
+
     return pdf_file_path

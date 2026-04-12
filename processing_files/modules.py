@@ -1,10 +1,47 @@
-import zipfile
-import io
-import shutil
-import xml.etree.ElementTree as ET
+import zipfile, uuid , io, shutil, re
 from pathlib import Path
 from typing import Dict
 from config import temp_dir
+from pydantic import BaseModel
+
+class FacultyRequest(BaseModel):
+    faculty_name: str
+
+def replace_placeholders_in_slide(slide_element, data: Dict[str, str]) -> None:
+    """
+    Замена плейсхолдеров в одном слайде.
+    """
+    placeholders = {f"{{{{{key}}}}}": str(val) for key, val in data.items()}
+
+    # Ищем все текстовые элементы внутри слайда
+    for elem in slide_element.iter():
+        if elem.text:
+            for placeholder, value in placeholders.items():
+                if placeholder in elem.text:
+                    elem.text = elem.text.replace(placeholder, value)
+        if elem.tail:
+            for placeholder, value in placeholders.items():
+                if placeholder in elem.tail:
+                    elem.tail = elem.tail.replace(placeholder, value)
+
+
+def remove_unmatched_placeholders(slide, used_keys):
+    # Получаем все элементы с текстом
+    for element in slide.iter():
+        if element.text:
+
+            placeholders = re.findall(r'\{\{([^}]+)\}\}', element.text)
+
+            for placeholder in placeholders:
+                if placeholder not in used_keys:
+                    # Удаляем незадействованный плейсхолдер
+                    element.text = element.text.replace(f"{{{{{placeholder}}}}}", "")
+
+def random_file_name():
+
+    unique_name = uuid.uuid4().hex
+
+    return unique_name
 
 
 
@@ -67,50 +104,3 @@ def pack_pptx(unpack_dir: Path, output_pptx_path: Path) -> None:
                 zip_ref.write(file_path, arcname)
 
 
-def replace_placeholders(xml_path: Path, data: Dict[str, str]) -> None:
-    """
-    Замена плейсхолдеров в XML-файле на значения из словаря.
-
-    Args:
-        xml_path (Path): Путь к XML-файлу для модификации
-        data (Dict[str, str]): Словарь замен, где ключ — имя плейсхолдера,
-                               значение — текст для подстановки
-    """
-    # Парсим XML
-    tree = ET.parse(xml_path)
-    root = tree.getroot()
-
-    # Рекурсивно обходим все элементы
-    for elem in root.iter():
-        if elem.text:
-            for key, val in data.items():
-                elem.text = elem.text.replace(f"{{{{{key}}}}}", str(val))
-        if elem.tail:
-            for key, val in data.items():
-                elem.tail = elem.tail.replace(f"{{{{{key}}}}}", str(val))
-
-    # Записываем изменения обратно
-    tree.write(xml_path, encoding='utf-8', xml_declaration=True)
-
-
-def zip_and_save(folder, output_dir: Path):
-    """
-    Сохраняет ZIP архив на диск
-
-    Args:
-        folder: папка для архивации
-        output_dir: директория для сохранения ZIP файла
-
-    Returns:
-        Path: путь к созданному ZIP файлу
-    """
-    # Создаем имя ZIP файла на основе имени папки
-    zip_filename = output_dir / f"{folder.name}.zip"
-
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        for file_path in folder.rglob("*"):
-            if file_path.is_file():
-                arcname = file_path.relative_to(folder.parent)
-                zip_file.write(file_path, arcname=arcname)
-
-    return zip_filename
