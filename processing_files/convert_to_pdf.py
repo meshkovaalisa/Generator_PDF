@@ -1,23 +1,26 @@
 import subprocess
 from pathlib import Path
-inkscape_path = r"C:\Program Files\Inkscape\inkscape.exe"
-from config import soffice_path
-def convert_file_to_pdf(file_path, output_dir):
 
+def convert_file_to_pdf(file_path, output_dir):
     file_path = Path(file_path)
     output_dir = Path(output_dir)
-
-    command = [
-        soffice_path,
-        '--headless',
-        '--convert-to', 'pdf',
-        '--outdir', output_dir,
-        file_path
-    ]
-
-    subprocess.run(command, check=True)
-
     pdf_file_path = output_dir / f"{file_path.stem}.pdf"
-    print(pdf_file_path, pdf_file_path.name)
+    
+    # Исправленная команда (без --interface)
+    command = [
+        'unoconvert',
+        '--host-location', 'remote',
+        '--port', '2003',
+        '--host', '127.0.0.1',  # вместо --interface
+        str(file_path),
+        str(pdf_file_path)
+    ]
+    
+    result = subprocess.run(command, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"STDERR: {result.stderr}")
+        print(f"STDOUT: {result.stdout}")
+        raise subprocess.CalledProcessError(result.returncode, command)
+    
     return pdf_file_path
-
