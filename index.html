@@ -1,27 +1,79 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <link rel="stylesheet" href="static/style.css" />
-  </head>
-  <body>
-    <div class="card">
-      <h1>Загрузка файлов</h1>
-      <p>Шаблоны принимаются в форматах <strong>.svg, .odp, .pptx</strong></p>
-      <p>Текст пишется в формате <strong>.json</strong></p>
-      <form action="/render_files" method="post" enctype="multipart/form-data">
-        <input
-          type="file"
-          name="template"
-          accept=".odp, .pptx, .svg"
-          required
-        />
-        <input type="file" name="data" accept=".json" required />
-        <button type="submit">Отправить</button>
-      </form>
-      <div class="note">Файл будет сконвертирован в PDF</div>
-    </div>
-  </body>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Выбор факультета</title>
+</head>
+<body>
+    <label>Выберите факультет:</label>
+    <select id="facultiesSelect">
+        <option>Загрузка...</option>
+    </select>
+    <br><br>
+    <button id="createButton">Создать</button>
+
+    <script>
+        // Запрашиваем данные с вашего эндпоинта
+        fetch('/faculties')
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('facultiesSelect');
+                select.innerHTML = '<option value="">-- Выберите факультет --</option>';
+
+                if (data.faculties && Array.isArray(data.faculties)) {
+                    data.faculties.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                document.getElementById('facultiesSelect').innerHTML = '<option>Ошибка загрузки</option>';
+            });
+
+        // Обработчик кнопки "Создать"
+        document.getElementById('createButton').addEventListener('click', function() {
+            const select = document.getElementById('facultiesSelect');
+            const selectedValue = select.value;
+
+            if (!selectedValue) {
+                alert('Пожалуйста, выберите факультет');
+                return;
+            }
+
+            // Отправляем запрос на /render с параметром faculty_name
+            fetch('/render', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ faculty_name: selectedValue })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return response.json().then(err => {
+                            throw new Error(err.detail || 'Факультет не найден');
+                        });
+                    }
+                    throw new Error(`Ошибка HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Полученные данные:', data);
+                alert(`Успешно! Найдено ${data.lenght} программ обучения`);
+                // Здесь вы можете обработать полученные данные
+                console.log('Бакалавриат/Специалитет:', data);
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert(`Ошибка: ${error.message}`);
+            });
+        });
+    </script>
+</body>
 </html>

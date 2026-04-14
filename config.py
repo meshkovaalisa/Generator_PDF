@@ -3,6 +3,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent
 temp_dir = BASE_DIR / "temp"
 rendered_files_dir = BASE_DIR / "rendered_files"
-soffice_path = r"/usr/bin/libreoffice"
+soffice_path = r"C:\Program Files\LibreOffice\program\soffice.exe"
+faculties_dir = BASE_DIR / "faculties"
+templates_dir = BASE_DIR / "static" / "templates"
 
 

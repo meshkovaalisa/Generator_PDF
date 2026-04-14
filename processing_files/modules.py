@@ -1,13 +1,61 @@
-import zipfile
-import io
-import shutil
+import zipfile, uuid , io, shutil, re
 from pathlib import Path
 from typing import Dict
 from config import temp_dir
-from lxml import etree
+from pydantic import BaseModel
+
+class FacultyRequest(BaseModel):
+    faculty_name: str
+
+def replace_placeholders_in_slide(slide_element, data: Dict[str, str]) -> None:
+    """
+    Замена плейсхолдеров в одном слайде.
+    """
+    placeholders = {f"{{{{{key}}}}}": str(val) for key, val in data.items()}
+
+    # Ищем все текстовые элементы внутри слайда
+    for elem in slide_element.iter():
+        if elem.text:
+            for placeholder, value in placeholders.items():
+                if placeholder in elem.text:
+                    elem.text = elem.text.replace(placeholder, value)
+        if elem.tail:
+            for placeholder, value in placeholders.items():
+                if placeholder in elem.tail:
+                    elem.tail = elem.tail.replace(placeholder, value)
+
+
+def remove_unmatched_placeholders(slide, used_keys):
+    # Получаем все элементы с текстом
+    for element in slide.iter():
+        if element.text:
+
+            placeholders = re.findall(r'\{\{([^}]+)\}\}', element.text)
+
+            for placeholder in placeholders:
+                if placeholder not in used_keys:
+                    # Удаляем незадействованный плейсхолдер
+                    element.text = element.text.replace(f"{{{{{placeholder}}}}}", "")
+
+def random_file_name():
+
+    unique_name = uuid.uuid4().hex
+
+    return unique_name
+
 
 
 def unpack(odp_bytes: bytes, filename: str) -> Path:
+    """
+    Распаковка и сохранение файла в виде xml во временную дирректорию
+
+    Args:
+        odp_bytes (bytes): Содержимое файла-шаблона в виде байтов
+        filename (str): Имя исходного файла (используется для названия папки)
+
+    Returns:
+        Path: Путь к созданной директории с распакованным содержимым
+    """
     stem = Path(filename).stem
     target_dir = temp_dir / stem
     if target_dir.exists():
@@ -18,7 +66,17 @@ def unpack(odp_bytes: bytes, filename: str) -> Path:
     return target_dir
 
 
-def pack_odp(unpack_dir: Path, output_odp_path: Path):
+def pack_odp(unpack_dir: Path, output_odp_path: Path) -> None:
+    """
+    Запаковка распакованной директории обратно в файл формата .odp.
+
+    Args:
+        unpack_dir (Path): Путь к директории с распакованным содержимым .odp
+        output_odp_path (Path): Путь для сохранения результирующего .odp файла
+
+    Raises:
+        FileNotFoundError: Если в директории отсутствует файл 'mimetype'
+    """
     mimetype_file = unpack_dir / 'mimetype'
     if not mimetype_file.exists():
         raise FileNotFoundError("mimetype not found")
@@ -31,7 +89,14 @@ def pack_odp(unpack_dir: Path, output_odp_path: Path):
             zipf.write(f, arcname)
 
 
-def pack_pptx(unpack_dir: Path, output_pptx_path: Path):
+def pack_pptx(unpack_dir: Path, output_pptx_path: Path) -> None:
+    """
+    Запаковка распакованной директории обратно в файл формата .pptx.
+
+    Args:
+        unpack_dir (Path): Путь к директории с распакованным содержимым .pptx
+        output_pptx_path (Path): Путь для сохранения результирующего .pptx файла
+    """
     with zipfile.ZipFile(output_pptx_path, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
         for file_path in unpack_dir.rglob('*'):
             if file_path.is_file():
@@ -39,20 +104,3 @@ def pack_pptx(unpack_dir: Path, output_pptx_path: Path):
                 zip_ref.write(file_path, arcname)
 
 
-def replace_placeholders(xml_path: Path, data: dict[str, str]) -> None:
-    # Парсим с сохранением исходных префиксов
-    parser = etree.XMLParser(remove_blank_text=False)
-    tree = etree.parse(str(xml_path), parser)
-    root = tree.getroot()
-
-    # Рекурсивно обходим все элементы
-    for elem in root.iter():
-        if elem.text:
-            for key, val in data.items():
-                elem.text = elem.text.replace(f"{{{{{key}}}}}", str(val))
-        if elem.tail:
-            for key, val in data.items():
-                elem.tail = elem.tail.replace(f"{{{{{key}}}}}", str(val))
-
-    # Записываем обратно, сохраняя исходные префиксы
-    tree.write(str(xml_path), encoding='utf-8', xml_declaration=True, pretty_print=False)
