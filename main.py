@@ -62,7 +62,7 @@ async def index() -> HTMLResponse:
     Returns:
         HTMLResponse: экземпляр класса с наполненнием .html
     """
-    file_path = "index.html"
+    file_path = "static/index.html"
 
     with open(file_path, 'r', encoding="utf-8") as file:
         html_content = file.read()
