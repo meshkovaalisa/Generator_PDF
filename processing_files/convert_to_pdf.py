@@ -14,6 +14,10 @@ def convert_file_to_pdf(file_path: Union[str, Path], output_dir: Union[str, Path
 
     Returns:
         Path: Путь к созданному PDF-файлу
+
+    Raises:
+        subprocess.CalledProcessError: Если процесс конвертации завершился с ошибкой
+                                      (например, если файл не существует или повреждён)
     """
 
     file_path = Path(file_path)
