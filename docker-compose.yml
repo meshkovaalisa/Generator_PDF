@@ -13,4 +13,13 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
+      - UNOSERVER_HOST=unoserver-container  
+      - UNOSERVER_PORT=2003
+    depends_on:
+      - unoserver-docker
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  unoserver-docker:
+    image: ghcr.io/unoconv/unoserver-docker
+    container_name: unoserver-container
+    restart: always

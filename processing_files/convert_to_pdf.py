@@ -1,17 +1,19 @@
 import subprocess
 from pathlib import Path
+import os
 
 def convert_file_to_pdf(file_path, output_dir):
     file_path = Path(file_path)
     output_dir = Path(output_dir)
     pdf_file_path = output_dir / f"{file_path.stem}.pdf"
     
-    # Исправленная команда (без --interface)
+    UNOSERVER_HOST = os.getenv("UNOSERVER_HOST", "unoserver-container")  
+    UNOSERVER_PORT = os.getenv("UNOSERVER_PORT", "2003")
+
     command = [
         'unoconvert',
-        '--host-location', 'remote',
-        '--port', '2003',
-        '--host', '127.0.0.1',  # вместо --interface
+        '--host', UNOSERVER_HOST,  
+        '--port', UNOSERVER_PORT,
         str(file_path),
         str(pdf_file_path)
     ]
