@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi-container
+    # restart: always
     ports:
       - "8000:8000"
     volumes:
@@ -22,4 +23,4 @@ services:
   unoserver-docker:
     image: ghcr.io/unoconv/unoserver-docker
     container_name: unoserver-container
-    restart: always
+    # restart: always

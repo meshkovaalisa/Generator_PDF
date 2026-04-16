@@ -3,7 +3,7 @@ body {
   max-width: 600px;
   margin: 50px auto;
   padding: 20px;
-  background: #ede1d9;
+  background: #d9e5ed; /* был #ede1d9 (бежевый) -> стал светло-синий */
 }
 
 .card {
@@ -16,12 +16,12 @@ body {
 
 h2 {
   margin-top: 0;
-  color: #5c3015;
+  color: #15455c; /* был #5c3015 (коричневый) -> стал тёмно-синий */
   text-align: center;
 }
 
 button {
-  background: #894922;
+  background: #224b89; /* был #894922 (оранжево-коричневый) -> стал синий */
   color: white;
   border: none;
   padding: 12px 24px;
@@ -34,7 +34,7 @@ button {
 }
 
 button:hover {
-  background: #a26b3e;
+  background: #3e6ba6; /* был #a26b3e -> стал светлее-синий */
 }
 
 .form-group {
@@ -45,15 +45,15 @@ button:hover {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #5c3015;
+  color: #15455c; /* был #5c3015 -> стал тёмно-синий */
 }
 
 select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #e1d1cb;
+  border: 1px solid #cbdbe1; /* был #e1d1cb (розовато-бежевый) -> стал синевато-серый */
   border-radius: 8px;
-  background: #fcf9f8;
+  background: #f8f9fc; /* был #fcf9f8 (тёплый) -> стал холодный почти белый */
   font-family: inherit;
   font-size: 14px;
   cursor: pointer;
@@ -61,7 +61,7 @@ select {
 
 select:focus {
   outline: none;
-  border-color: #c57758;
+  border-color: #587bb7; /* был #c57758 (теплый) -> стал синий */
 }
 
 .controls {
@@ -112,8 +112,8 @@ select:focus {
 }
 
 .spinner {
-  border: 4px solid #ede1d9;
-  border-top: 4px solid #894922;
+  border: 4px solid #d9e5ed; /* был #ede1d9 -> стал светло-синий (под новый фон) */
+  border-top: 4px solid #224b89; /* был #894922 -> стал синий */
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -127,5 +127,5 @@ select:focus {
 }
 
 .loader-text {
-  color: #5c3015;
+  color: #15455c; /* был #5c3015 -> стал тёмно-синий */
 }
