@@ -1,15 +1,35 @@
-import zipfile, uuid , io, shutil, re
+import zipfile, uuid, io, shutil, re
 from pathlib import Path
 from typing import Dict
 from config import temp_dir
 from pydantic import BaseModel
 
+
 class FacultyRequest(BaseModel):
+    """
+    Pydantic модель для запроса на генерацию документа факультета.
+
+    Attributes:
+        faculty_name (str): Название факультета, для которого необходимо сгенерировать документ
+    """
     faculty_name: str
+
 
 def replace_placeholders_in_slide(slide_element, data: Dict[str, str]) -> None:
     """
     Замена плейсхолдеров в одном слайде.
+
+    Функция находит в XML-элементе слайда все текстовые плейсхолдеры вида {{key}}
+    и заменяет их на соответствующие значения из переданного словаря данных.
+    Обрабатывает как основной текст (elem.text), так и хвостовой текст (elem.tail).
+
+    Args:
+        slide_element (Element): XML-элемент, представляющий слайд (draw:page)
+        data (Dict[str, str]): Словарь с данными для замены, где ключи - имена плейсхолдеров
+                               (без двойных фигурных скобок), значения - текст для подстановки
+
+    Returns:
+        None: Функция изменяет переданный XML-элемент на месте
     """
     placeholders = {f"{{{{{key}}}}}": str(val) for key, val in data.items()}
 
@@ -26,6 +46,20 @@ def replace_placeholders_in_slide(slide_element, data: Dict[str, str]) -> None:
 
 
 def remove_unmatched_placeholders(slide, used_keys):
+    """
+    Удаляет неиспользованные плейсхолдеры из слайда.
+
+    Функция находит все плейсхолдеры вида {{...}} в текстовых элементах слайда
+    и удаляет те из них, ключи которых отсутствуют в списке использованных ключей.
+
+    Args:
+        slide (Element): XML-элемент, представляющий слайд (draw:page)
+        used_keys (iterable): Коллекция ключей, которые были использованы для замены
+                              (например, список или множество строк)
+
+    Returns:
+        None: Функция изменяет переданный XML-элемент на месте
+    """
     # Получаем все элементы с текстом
     for element in slide.iter():
         if element.text:
@@ -37,12 +71,20 @@ def remove_unmatched_placeholders(slide, used_keys):
                     # Удаляем незадействованный плейсхолдер
                     element.text = element.text.replace(f"{{{{{placeholder}}}}}", "")
 
-def random_file_name():
 
+def random_file_name():
+    """
+    Генерирует случайное уникальное имя файла.
+
+    Создаёт случайную строку на основе UUID версии 4, которая может быть
+    использована в качестве имени для временных файлов.
+
+    Returns:
+        str: Строка из 32 шестнадцатеричных символов (UUID без дефисов)
+    """
     unique_name = uuid.uuid4().hex
 
     return unique_name
-
 
 
 def unpack(odp_bytes: bytes, filename: str) -> Path:
@@ -102,5 +144,3 @@ def pack_pptx(unpack_dir: Path, output_pptx_path: Path) -> None:
             if file_path.is_file():
                 arcname = file_path.relative_to(unpack_dir)
                 zip_ref.write(file_path, arcname)
-
-

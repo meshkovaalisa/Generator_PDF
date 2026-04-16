@@ -15,8 +15,21 @@ from fastapi import HTTPException
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Код ДО yield выполняется при запуске (startup).
-    Код ПОСЛЕ yield выполняется при остановке (shutdown).
+    Управляет жизненным циклом приложения FastAPI.
+
+    Выполняет инициализацию при запуске (создание необходимых директорий,
+    загрузка данных с внешнего API, обработка и распределение данных по факультетам)
+    и очистку временных файлов при остановке сервера.
+
+    Args:
+        app (FastAPI): Экземпляр приложения FastAPI
+
+    Raises:
+        HTTPException: 504 - таймаут подключения к API
+        HTTPException: 4xx/5xx - ошибки при запросе к API или внутренние ошибки
+
+    Yields:
+        None: Передаёт управление основному приложению после инициализации
     """
     temp_dir.mkdir(parents=True, exist_ok=True)
     rendered_files_dir.mkdir(parents=True, exist_ok=True)
@@ -47,12 +60,14 @@ async def lifespan(app: FastAPI):
     clean_dir(rendered_files_dir)
     clean_dir(faculties_dir)
 
+
 app = FastAPI(title="Document Template Processor",
               description="Сервис для заполнения шаблонов документами и конвертации в PDF",
               version="1.0.0",
               lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index() -> HTMLResponse:
@@ -69,8 +84,25 @@ async def index() -> HTMLResponse:
 
     return HTMLResponse(content=html_content)
 
+
 @app.post("/render")
-async def render_faculty(request: FacultyRequest):  # Получаем из JSON тела запроса
+async def render_faculty(request: FacultyRequest):
+    """
+    Генерирует PDF-документ для указанного факультета.
+
+    Загружает данные факультета из JSON-файла, фильтрует образовательные программы
+    по уровням образования (бакалавриат/специалитет и магистратура/аспирантура),
+    обрабатывает ODP-шаблон, конвертирует его в PDF и возвращает готовый файл.
+
+    Args:
+        request (FacultyRequest): Объект запроса, содержащий название факультета
+
+    Returns:
+        FileResponse: PDF-файл с заполненным шаблоном для указанного факультета
+
+    Raises:
+        HTTPException: 404 - если факультет с указанным именем не найден
+    """
     faculty_name = request.faculty_name
 
     file_path = faculties_dir / f"{faculty_name}.json"
@@ -104,7 +136,16 @@ async def render_faculty(request: FacultyRequest):  # Получаем из JSON
 
 @app.get("/faculties")
 async def get_faculties_list():
+    """
+    Возвращает список всех доступных факультетов.
 
+    Сканирует директорию с JSON-файлами факультетов и извлекает названия
+    из имён файлов (без расширения).
+
+    Returns:
+        dict: Словарь с ключом "faculties", содержащий отсортированный
+              список названий факультетов
+    """
     faculties = []
 
     for file_path in faculties_dir.glob("*.json"):
