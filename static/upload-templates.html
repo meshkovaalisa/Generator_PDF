@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Загрузка шаблонов</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="header-nav">
+        <a href="/" class="nav-btn">Главная</a>
+        <a href="/upload-templates" class="nav-btn">Загрузка шаблона</a>
+      </nav>
+    </header>
+
+    <div class="card">
+      <h2>Загрузка шаблонов</h2>
+      <form
+        action="/upload-templates"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        <div class="form-group">
+          <label for="templates" class="select-label">Выберите файлы:</label>
+          <input
+            type="file"
+            id="templates"
+            name="templates"
+            accept=".odp"
+            multiple
+            required
+          />
+        </div>
+        <button type="submit">Загрузить</button>
+      </form>
+    </div>
+  </body>
+</html>
