@@ -1,6 +1,6 @@
 import uvicorn, json, httpx
-from fastapi import FastAPI
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from processing_files.handler import split_by_faculty, odp_handler
 from config import temp_dir, rendered_files_dir, faculties_dir, templates_dir
@@ -10,6 +10,8 @@ from processing_files.modules import FacultyRequest
 from contextlib import asynccontextmanager
 from processing_files.filter_json import filter_data
 from fastapi import HTTPException
+from typing import List
+import shutil
 
 
 @asynccontextmanager
@@ -154,5 +156,28 @@ async def get_faculties_list():
     return {"faculties": sorted(faculties)}
 
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+@app.get('/upload-templates')
+async def upload_page():
+
+    file_path = "static/upload-templates.html"
+
+    with open(file_path, 'r', encoding="utf-8") as file:
+        html_content = file.read()
+
+    return HTMLResponse(content=html_content)
+
+
+@app.post("/upload-templates")
+async def upload_templates(templates: List[UploadFile] = File(...)):
+    """
+    Обработка загрузки ODP шаблонов
+    """
+    
+    for file in templates:
+        if file.filename:
+            file_path = templates_dir / file.filename
+            
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+    return RedirectResponse(url='/', status_code=303)
