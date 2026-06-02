@@ -180,4 +180,4 @@ async def upload_templates(templates: List[UploadFile] = File(...)):
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
-    return RedirectResponse(url='/', status_code=303)
+    return RedirectResponse(url='./', status_code=303)
