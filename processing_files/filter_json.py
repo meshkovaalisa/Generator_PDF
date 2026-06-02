@@ -1,134 +1,170 @@
 import re
+from typing import Dict, Any, List, Tuple, Union
+
+# регулярки
+RE_LI_OPEN = re.compile(r'<li[^>]*>')
+RE_LI_CLOSE = re.compile(r'</li>')
+RE_P_OPEN = re.compile(r'<p[^>]*>')
+RE_P_CLOSE = re.compile(r'</p>')
+RE_BR = re.compile(r'<br\s*/?>')
+RE_INLINE_TAGS = re.compile(r'</?(?:ul|ol|div|span|strong|em|b|i)[^>]*>')
+RE_ALL_TAGS = re.compile(r'<[^>]+>')
+RE_MULTIPLE_NEWLINES = re.compile(r'\n\s*\n')
+RE_LINE_START_SPACES = re.compile(r'^\s+', flags=re.MULTILINE)
+RE_SPACES_BEFORE_NEWLINE = re.compile(r'[ \t]+\n')
+RE_BULLET = re.compile(r'^[•\-*—]\s*')
+RE_NUMBERED = re.compile(r'^\d+\.\s*')
+
+BULLET_MARKERS = ('•', '-', '*', '—')
+
+HTML_ENTITIES = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+}
 
 
-def clear_html(item_data: dict):
-    for field in list(item_data.keys()):
-        if isinstance(item_data[field], dict) and "TEXT" in item_data[field]:
-            html_text = item_data[field]["TEXT"]
-            html_text = re.sub(r'<li[^>]*>', '\n• ', html_text)
-            html_text = re.sub(r'</li>', '', html_text)
-            html_text = re.sub(r'<p[^>]*>', '\n', html_text)
-            html_text = re.sub(r'</p>', '', html_text)
-            html_text = re.sub(r'<br\s*/?>', '\n', html_text)
-            html_text = re.sub(r'</?(?:ul|ol|div|span|strong|em|b|i)[^>]*>', '', html_text)
-            html_text = re.sub(r'<[^>]+>', '', html_text)
-            html_text = html_text.replace('&nbsp;', ' ')
-            html_text = html_text.replace('&amp;', '&')
-            html_text = html_text.replace('&lt;', '<')
-            html_text = html_text.replace('&gt;', '>')
-            html_text = html_text.replace('&quot;', '"')
-            html_text = re.sub(r'\n\s*\n', '\n', html_text)
-            html_text = re.sub(r'^\s+', '', html_text, flags=re.MULTILINE)
-            html_text = re.sub(r'[ \t]+\n', '\n', html_text)
-            html_text = html_text.strip()
-            item_data[field] = html_text
+def clean_html_text(html_text: str) -> str:
+    """Очистка HTML-текста"""
+    html_text = RE_LI_OPEN.sub('\n• ', html_text)
+    html_text = RE_LI_CLOSE.sub('', html_text)
+    html_text = RE_P_OPEN.sub('\n', html_text)
+    html_text = RE_P_CLOSE.sub('', html_text)
+    html_text = RE_BR.sub('\n', html_text)
+    html_text = RE_INLINE_TAGS.sub('', html_text)
+    html_text = RE_ALL_TAGS.sub('', html_text)
+
+    for entity, replacement in HTML_ENTITIES.items():
+        html_text = html_text.replace(entity, replacement)
+
+    html_text = RE_MULTIPLE_NEWLINES.sub('\n', html_text)
+    html_text = RE_LINE_START_SPACES.sub('', html_text)
+    html_text = RE_SPACES_BEFORE_NEWLINE.sub('\n', html_text)
+
+    return html_text.strip()
+
+
+def clear_html(item_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Очистка HTML в полях словаря"""
+    for field, value in item_data.items():
+        if isinstance(value, dict) and "TEXT" in value:
+            item_data[field] = clean_html_text(value["TEXT"])
     return item_data
 
 
-def filter_data(item_data: dict):
-    new_item_data = dict()
+def parse_bullet_list(text: str, max_items: int) -> List[str]:
+    """Извлечение элементов списка из текста с маркерами"""
+    text = RE_ALL_TAGS.sub('', text)
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
 
-    # Удаление полей для разных уровней образования
-    if item_data.get("education") in ["Аспирантура", "Магистратура"]:
-        for key in ["VI_1", "VI_2", "VI_3_choice_1", "VI_3_choice_2", "VI_3_choice_3"]:
-            item_data.pop(key, None)
+    items = []
+    for line in lines:
+        if line.startswith(BULLET_MARKERS):
+            items.append(RE_BULLET.sub('', line))
+        elif RE_NUMBERED.match(line):
+            items.append(RE_NUMBERED.sub('', line))
+        else:
+            items.append(line)
 
-    if item_data.get("education") in ["Специалитет", "Бакалавриат"]:
-        item_data.pop("VI_mag_asp", None)
+    items.extend([''] * (max_items - len(items)))
+    return items[:max_items]
 
-    # ========== ГЛАВНОЕ: ДОБАВЛЯЕМ ПОЛЯ ДЛЯ ЕГЭ ==========
-    # Основные экзамены
-    item_data["V1_1"] = item_data.get("VI_1", "—")
-    item_data["V1_2"] = item_data.get("VI_2", "—")
 
-    # Экзамены на выбор
-    item_data["V1_3"] = item_data.get("VI_3_choice_1", "—")
-    item_data["V1_4"] = item_data.get("VI_3_choice_2", "—")
-    item_data["V1_5"] = item_data.get("VI_3_choice_3", "—")
+def get_text_field(item_data: Dict[str, Any], field_name: str) -> str:
+    """Получение текстового поля"""
+    field = item_data.get(field_name, "")
+    if isinstance(field, dict):
+        return field.get("TEXT", "")
+    return str(field)
 
-    # Если основные пустые, но есть массив VI
-    if item_data["V1_1"] == "—" and "VI" in item_data and isinstance(item_data["VI"], list):
-        if len(item_data["VI"]) > 0 and item_data["VI"][0]:
-            item_data["V1_1"] = item_data["VI"][0]
-        if len(item_data["VI"]) > 1 and item_data["VI"][1]:
-            item_data["V1_2"] = item_data["VI"][1]
 
-    # Если экзамены на выбор пустые, но есть массив VI_choice
-    if item_data["V1_3"] == "—" and "VI_choice" in item_data and isinstance(item_data["VI_choice"], list):
+def handle_ege_exams(item_data: Dict[str, Any]) -> None:
+    """Обработка полей ЕГЭ"""
+    vi = item_data.get("VI")
+    vi_1 = item_data.get("VI_1")
+    vi_2 = item_data.get("VI_2")
+
+    item_data["V1_1"] = vi_1 if vi_1 else "—"
+    item_data["V1_2"] = vi_2 if vi_2 else "—"
+
+    if item_data["V1_1"] == "—" and isinstance(vi, list):
+        if len(vi) > 0 and vi[0]:
+            item_data["V1_1"] = vi[0]
+        if len(vi) > 1 and vi[1]:
+            item_data["V1_2"] = vi[1]
+
+    vi_choices = [item_data.get(f"VI_3_choice_{i}") for i in range(1, 4)]
+    all_empty = True
+
+    for i in range(3):
+        value = vi_choices[i]
+        item_data[f"V1_{i + 3}"] = value if value else "—"
+        if value:
+            all_empty = False
+
+    if all_empty and isinstance(item_data.get("VI_choice"), list):
         choices = [ex for ex in item_data["VI_choice"] if ex]
         for i, choice in enumerate(choices[:3]):
             item_data[f"V1_{i + 3}"] = choice
-    # ===================================================
 
-    # Поля opp1..opp5 (из work)
-    work_text = ""
-    if "work" in item_data:
-        if isinstance(item_data["work"], dict) and "TEXT" in item_data["work"]:
-            work_text = item_data["work"]["TEXT"]
-        else:
-            work_text = str(item_data["work"])
 
-    work_text = re.sub(r'<[^>]+>', '', work_text)
-    lines = [l.strip() for l in work_text.split('\n') if l.strip()]
-    opportunities = []
-    for line in lines:
-        if line.startswith(('•', '-', '*', '—')):
-            opportunities.append(re.sub(r'^[•\-*—]\s*', '', line))
-        else:
-            opportunities.append(line)
+def split_title(title: str) -> Tuple[str, str]:
+    parts = title.split(". ")
+    if len(parts) != 2 and "(с двумя профилями подготовки)" not in title:
+        parts = title.rsplit(".", 1)
 
-    while len(opportunities) < 5:
-        opportunities.append("")
+    if parts:
+        code = parts[0]
+        program = ". ".join(parts[1:]) if len(parts) > 1 else ""
 
-    for i in range(1, 6):
-        item_data[f"opp{i}"] = opportunities[i - 1]
+        if len(code) < 10:
+            code = ". ".join(parts)
+            program = ""
 
-    # Поля study1..study8 (из study)
-    study_text = ""
-    if "study" in item_data:
-        if isinstance(item_data["study"], dict) and "TEXT" in item_data["study"]:
-            study_text = item_data["study"]["TEXT"]
-        else:
-            study_text = str(item_data["study"])
+        return code, program
 
-    study_text = re.sub(r'<[^>]+>', '', study_text)
-    study_lines = [l.strip() for l in study_text.split('\n') if l.strip()]
-    study_items = []
-    for line in study_lines:
-        if line.startswith(('•', '-', '*', '—')):
-            study_items.append(re.sub(r'^[•\-*—]\s*', '', line))
-        elif re.match(r'^\d+\.', line):
-            study_items.append(re.sub(r'^\d+\.\s*', '', line))
-        else:
-            study_items.append(line)
+    return title, ""
 
-    while len(study_items) < 8:
-        study_items.append("")
 
-    for i in range(1, 9):
-        item_data[f"study{i}"] = study_items[i - 1]
+def filter_data(item_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Фильтрация и преобразование данных"""
+    education = item_data.get("education", "")
 
-    # profile_value
+    if education in ("Аспирантура", "Магистратура"):
+        for key in ("VI_1", "VI_2", "VI_3_choice_1", "VI_3_choice_2", "VI_3_choice_3"):
+            item_data.pop(key, None)
+    elif education in ("Специалитет", "Бакалавриат"):
+        item_data.pop("VI_mag_asp", None)
+
+    handle_ege_exams(item_data)
+
+    work_text = get_text_field(item_data, "work")
+    opportunities = parse_bullet_list(work_text, 5)
+    for i, opp in enumerate(opportunities, 1):
+        item_data[f"opp{i}"] = opp
+
+    study_text = get_text_field(item_data, "study")
+    study_items = parse_bullet_list(study_text, 8)
+    for i, item in enumerate(study_items, 1):
+        item_data[f"study{i}"] = item
+
     item_data["profile_value"] = item_data.get("specialty", "Не указано")
 
-    # budget_or_paid_str
-    if "budget_or_paid" in item_data and isinstance(item_data["budget_or_paid"], list):
-        item_data["budget_or_paid_str"] = ", ".join(item_data["budget_or_paid"])
+    budget = item_data.get("budget_or_paid")
+    if isinstance(budget, list):
+        item_data["budget_or_paid_str"] = ", ".join(budget)
     else:
-        item_data["budget_or_paid_str"] = item_data.get("budget_or_paid", "Информация отсутствует")
+        item_data["budget_or_paid_str"] = budget if budget else "Информация отсутствует"
 
-    # Обработка title
-    parts = item_data["title"].split(". ")
-    if len(parts) != 2 and "(с двумя профилями подготовки)" not in item_data["title"]:
-        parts = item_data["title"].rsplit(".", 1)
+    title = item_data.pop("title", "")
+    code, program = split_title(title)
 
-    item_data.pop("title", None)
-
-    new_item_data["code_program"] = parts[0]
-    new_item_data["program"] = ". ".join(parts[1:]) if len(parts) > 1 else ""
-    if len(new_item_data["code_program"]) < 10:
-        new_item_data["code_program"] = ". ".join(parts[0:])
-        new_item_data["program"] = ""
+    new_item_data = {
+        "code_program": code,
+        "program": program
+    }
 
     new_item_data.update(item_data)
     clear_html(new_item_data)
