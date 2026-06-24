@@ -113,9 +113,10 @@ def filter_data(item_data: dict):
 
     # budget_or_paid_str
     if "budget_or_paid" in item_data and isinstance(item_data["budget_or_paid"], list):
-        item_data["budget_or_paid_str"] = ", ".join(item_data["budget_or_paid"])
+
+        item_data["budget_or_paid"] = ", ".join(item_data["budget_or_paid"])
     else:
-        item_data["budget_or_paid_str"] = item_data.get("budget_or_paid", "Информация отсутствует")
+        item_data["budget_or_paid"] = item_data.get("budget_or_paid", "Информация отсутствует")
 
     # Обработка title
     parts = item_data["title"].split(". ")
@@ -123,7 +124,6 @@ def filter_data(item_data: dict):
         parts = item_data["title"].rsplit(".", 1)
 
     item_data.pop("title", None)
-
     new_item_data["code_program"] = parts[0]
     new_item_data["program"] = ". ".join(parts[1:]) if len(parts) > 1 else ""
     if len(new_item_data["code_program"]) < 10:
